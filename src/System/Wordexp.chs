@@ -4,12 +4,12 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -- wordexp (and wordfree) Haskell wrappers
 module System.Wordexp
- ( -- Wrapper
-   wordexp
+ ( -- Wrappers
+   wordexp, wordexp'
    -- Flags
  , Flags, nosubst, errors, noundef
    -- Exceptions
- , WordexpException (..)
+ , WordexpError (..)
  ) where
 
 import Control.Exception (Exception, throw)
@@ -70,7 +70,7 @@ noundef = Flags $ fromEnum WRDE_UNDEF
 {-# INLINE noundef #-}
 
 
-{# enum define WordexpException
+{# enum define WordexpError
   { WRDE_NOSPACE as OutOfSpace
   , WRDE_BADCHAR as IllegalCharacterOccurence
   , WRDE_BADVAL  as UndefinedShellVariable
@@ -78,14 +78,19 @@ noundef = Flags $ fromEnum WRDE_UNDEF
   , WRDE_SYNTAX  as ShellSyntaxError
   } deriving (Show, Read, Eq, Ord, Bounded, Ix, Data, Typeable) #}
 
-instance Exception WordexpException
-
+instance Exception WordexpError
 
 -- | wordexp wrapper
 --
 -- If everything went well, return matches list otherwise throw an exception
-wordexp :: String -> Flags -> IO [String]
-wordexp s (Flags f) =
+wordexp :: String -> IO [String]
+wordexp s = either throw id `fmap` wordexp' mempty s
+
+-- | wordexp wrapper
+--
+-- Safer version also allowing to specify desired flags
+wordexp' :: Flags -> String -> IO (Either WordexpError [String])
+wordexp' (Flags f) s =
   withCString s $ \cs ->
     allocaBytes size $ \p -> do
       ret <- c_wordexp cs p (fromIntegral f)
@@ -95,13 +100,10 @@ wordexp s (Flags f) =
           v <- wordv p
           xs <- forM [0 .. c-1] $ peekElemOff v >=> peekCString
           c_wordfree p
-          return xs
-        e -> throw . (toEnum :: Int -> WordexpException) $ fromIntegral e
+          return $ Right xs
+        e -> return . Left . toEnum $ fromIntegral e
  where
-  size =
-    sizeOf (undefined :: CSize) +
-    sizeOf (undefined :: Ptr CString) +
-    sizeOf (undefined :: CSize)
+  size = sizeOf (undefined :: CSize) + sizeOf (undefined :: Ptr CString) + sizeOf (undefined :: CSize)
   {-# INLINE size #-}
 
   wordc :: Ptr Wordexp -> IO CSize
