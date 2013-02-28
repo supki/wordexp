@@ -40,18 +40,21 @@ data Wordexp
   } deriving (Show, Read, Eq, Ord, Bounded, Ix, Data, Typeable) #}
 
 -- | Wordexp flags
--- Not every flag is supported since some of them
--- do not make much sense in Haskell anyway
+--
+-- Not every flag is supported since some of them do not make much sense in Haskell anyway
 newtype Flags = Flags Int
+#if defined(__GLASGOW_HASKELL__) && (__GLASGOW_HASKELL__ >= 706)
   deriving (Show, Read, Eq, Ord, Bounded, Bits, Ix, Data, Typeable)
+#else
+  deriving (Show, Read, Eq, Ord, Bounded, Num, Bits, Ix, Data, Typeable)
+#endif
 
 instance Monoid Flags where
   mempty = Flags 0
   a `mappend` b = a .|. b
   {-# INLINE mappend #-}
 
--- | Disable command substitution in patterns
--- Throw exception if found one
+-- | Disable command substitution in patterns, throw exception if found one
 nosubst :: Flags
 nosubst = Flags $ fromEnum WRDE_NOCMD
 {-# INLINE nosubst #-}
@@ -61,8 +64,7 @@ errors :: Flags
 errors = Flags $ fromEnum WRDE_SHOWERR
 {-# INLINE errors #-}
 
--- | Do not accept undefined shell variables
--- Throw exception if found one
+-- | Do not accept undefined shell variables, throw exception if found one
 noundef :: Flags
 noundef = Flags $ fromEnum WRDE_UNDEF
 {-# INLINE noundef #-}
@@ -80,8 +82,8 @@ instance Exception WordexpException
 
 
 -- | wordexp wrapper
--- If everything went well, retyrn matches list,
--- otherwise throw an exception
+--
+-- If everything went well, return matches list otherwise throw an exception
 wordexp :: String -> Flags -> IO [String]
 wordexp s (Flags f) =
   withCString s $ \cs ->
