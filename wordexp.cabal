@@ -1,6 +1,6 @@
 name:                wordexp
 version:             0.1.0.0
-synopsis:            wordexp(3) wrapper
+synopsis:            wordexp(3) wrappers
 description:         man wordexp
 license:             BSD3
 license-file:        LICENSE
@@ -15,4 +15,5 @@ library
                      array
   hs-source-dirs:    src
   exposed-modules:   System.Wordexp
+                     System.Wordexp.Simple
   build-tools:       c2hs

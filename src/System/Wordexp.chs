@@ -2,17 +2,17 @@
 {-# LANGUAGE EmptyDataDecls #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
--- wordexp (and wordfree) Haskell wrappers
+-- | wordexp (and wordfree) Haskell wrapper
 module System.Wordexp
- ( -- Wrappers
-   wordexp, wordexp'
-   -- Flags
+ ( -- * Wrapper
+   wordexp
+   -- * Flags
  , Flags, nosubst, errors, noundef
-   -- Exceptions
+   -- * Errors
  , WordexpError (..)
  ) where
 
-import Control.Exception (Exception, throw)
+import Control.Exception (Exception)
 import Control.Monad
 import Data.Data (Data)
 import Data.Monoid (Monoid(..))
@@ -30,6 +30,7 @@ import Data.Array (Ix)
 data Wordexp
 
 
+-- | wordexp flags enum image in Haskellland
 {# enum define FLAGS
   { WRDE_APPEND  as WRDE_APPEND
   , WRDE_DOOFFS  as WRDE_DOOFFS
@@ -39,7 +40,7 @@ data Wordexp
   , WRDE_UNDEF   as WRDE_UNDEF
   } deriving (Show, Read, Eq, Ord, Bounded, Ix, Data, Typeable) #}
 
--- | Wordexp flags
+-- | wordexp flags
 --
 -- Not every flag is supported since some of them do not make much sense in Haskell anyway
 newtype Flags = Flags Int
@@ -54,7 +55,7 @@ instance Monoid Flags where
   a `mappend` b = a .|. b
   {-# INLINE mappend #-}
 
--- | Disable command substitution in patterns, throw exception if found one
+-- | Disable command substitution in patterns, treat them as errors
 nosubst :: Flags
 nosubst = Flags $ fromEnum WRDE_NOCMD
 {-# INLINE nosubst #-}
@@ -64,12 +65,13 @@ errors :: Flags
 errors = Flags $ fromEnum WRDE_SHOWERR
 {-# INLINE errors #-}
 
--- | Do not accept undefined shell variables, throw exception if found one
+-- | Do not accept undefined shell variables, treat them as errors
 noundef :: Flags
 noundef = Flags $ fromEnum WRDE_UNDEF
 {-# INLINE noundef #-}
 
 
+-- | Possible wordexp errors
 {# enum define WordexpError
   { WRDE_NOSPACE as OutOfSpace
   , WRDE_BADCHAR as IllegalCharacterOccurence
@@ -80,17 +82,12 @@ noundef = Flags $ fromEnum WRDE_UNDEF
 
 instance Exception WordexpError
 
--- | wordexp wrapper
---
--- If everything went well, return matches list otherwise throw an exception
-wordexp :: String -> IO [String]
-wordexp s = either throw id `fmap` wordexp' mempty s
 
 -- | wordexp wrapper
 --
--- Safer version also allowing to specify desired flags
-wordexp' :: Flags -> String -> IO (Either WordexpError [String])
-wordexp' (Flags f) s =
+-- Allows to specify desired flags, return expanded strings or encountered error if any
+wordexp :: Flags -> String -> IO (Either WordexpError [String])
+wordexp (Flags f) s =
   withCString s $ \cs ->
     allocaBytes size $ \p -> do
       ret <- c_wordexp cs p (fromIntegral f)
@@ -113,6 +110,7 @@ wordexp' (Flags f) s =
   wordv :: Ptr Wordexp -> IO (Ptr CString)
   wordv p = peekByteOff p (sizeOf (undefined :: CSize))
   {-# INLINE wordv #-}
+
 
 foreign import ccall unsafe "wordexp"
   c_wordexp :: CString -> Ptr Wordexp -> CInt -> IO CInt
