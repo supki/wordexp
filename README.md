@@ -1,7 +1,7 @@
 wordexp
 =======
 
-The best description of what `wordexp` is doing, apart from [manpage][1] and [haddocks][2] is simple ghci session:
+Apart from [manpage][1] and [haddocks][2] the best description of what `wordexp` is doing is simple ghci session:
 
 ```haskell
 >>> import System.Wordexp.Simple
