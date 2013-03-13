@@ -51,11 +51,12 @@ newtype Flags = Flags Int
 #endif
 
 instance Semigroup Flags where
-  a <> b = a .|. b
+  (<>) = (.|.)
+  {-# INLINE (<>) #-}
 
 instance Monoid Flags where
   mempty = Flags 0
-  a `mappend` b = a <> b
+  mappend = (<>)
   {-# INLINE mappend #-}
 
 -- | Disable command substitution in patterns, treat them as errors
