@@ -15,13 +15,13 @@ module System.Wordexp
 import Control.Exception (Exception)
 import Control.Monad
 import Data.Data (Data)
-import Data.Monoid (Monoid(..))
 import Data.Typeable (Typeable)
 import Foreign
 import Foreign.C
 import Foreign.C.Types
 
 import Data.Array (Ix)
+import Data.Semigroup (Semigroup(..), Monoid(..))
 
 #include <wordexp.h>
 
@@ -50,9 +50,12 @@ newtype Flags = Flags Int
   deriving (Show, Read, Eq, Ord, Bounded, Num, Bits, Ix, Data, Typeable)
 #endif
 
+instance Semigroup Flags where
+  a <> b = a .|. b
+
 instance Monoid Flags where
   mempty = Flags 0
-  a `mappend` b = a .|. b
+  a `mappend` b = a <> b
   {-# INLINE mappend #-}
 
 -- | Disable command substitution in patterns, treat them as errors
