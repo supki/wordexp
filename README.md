@@ -1,5 +1,6 @@
 wordexp
 =======
+[![Hackage](https://budueba.com/hackage/wordexp)](http://hackage.haskell.org/package/wordexp)
 
 Apart from [manpage][1] and [haddocks][2] the best description of what `wordexp` is doing is simple ghci session:
 
