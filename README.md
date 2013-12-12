@@ -1,6 +1,7 @@
 wordexp
 =======
 [![Hackage](https://budueba.com/hackage/wordexp)](http://hackage.haskell.org/package/wordexp)
+[![Build Status](https://secure.travis-ci.org/supki/wordexp.png?branch=master)](http://travis-ci.org/supki/wordexp)
 
 Apart from [manpage][1] and [haddocks][2] the best description of what `wordexp` is doing is simple ghci session:
 
