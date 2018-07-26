@@ -21,7 +21,9 @@ import Foreign.C
 import Foreign.C.Types
 
 import Data.Array (Ix)
+#if !MIN_VERSION_base(4,11,0)
 import Data.Semigroup (Semigroup(..), Monoid(..))
+#endif
 
 #include <wordexp.h>
 
